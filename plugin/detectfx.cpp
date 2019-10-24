@@ -45,6 +45,10 @@ const TCHAR *g_szNetfx46RegKeyName = g_szNetfx45RegKeyName;
 const TCHAR *g_szNetfx46RegValueName = g_szNetfx45RegValueName;
 const TCHAR *g_szNetfx47RegKeyName = g_szNetfx45RegKeyName;
 const TCHAR *g_szNetfx47RegValueName = g_szNetfx45RegValueName;
+//.Net Framework is override the key of 4...4.x
+const TCHAR *g_szNetfx48RegKeyName = g_szNetfx45RegKeyName;
+const TCHAR *g_szNetfx48RegValueName = g_szNetfx45RegValueName;
+
 const TCHAR *g_szNetfxStandardRegValueName = _T("Install");
 const TCHAR *g_szNetfxStandardSPxRegValueName = _T("SP");
 const TCHAR *g_szNetfxStandardVersionRegValueName = _T("Version");
@@ -97,6 +101,11 @@ const int g_dwNetfx471ReleaseVersion = 461310;
 // Version information for final release of .NET Framework 4.7.2
 const int g_dwNetfx472Win10ReleaseVersion = 461808;
 const int g_dwNetfx472ReleaseVersion = 461814;
+
+// Version information for final release of .NET Framework 4.8
+// My os is win10, the release nomber is undered the 2052(simple Chinese region)
+const int g_dwNetfx48Win10ReleaseVersion = 528049;
+const int g_dwNetfx48ReleaseVersion = 528049;
 
 // Constants for known .NET Framework versions used with the GetRequestedRuntimeInfo API
 const TCHAR *g_szNetfx10VersionString = _T("v1.0.3705");
@@ -870,6 +879,29 @@ bool IsNetfx472Installed()
 	return bRetValue;
 }
 
+/******************************************************************
+Function Name:	IsNetfx48Installed
+Description:	Uses the detection method recommended at
+http://msdn.microsoft.com/en-us/library/ee942965(v=vs.110).aspx
+to determine whether the .NET Framework 4.8 is
+installed on the machine
+Inputs:         NONE
+Results:        true if the .NET Framework 4.8 is installed
+false otherwise
+******************************************************************/
+bool IsNetfx48Installed()
+{
+	bool bRetValue = false;
+	DWORD dwRegValue = 0;
+
+	if (RegistryGetValue(HKEY_LOCAL_MACHINE, g_szNetfx48RegKeyName, g_szNetfx48RegValueName, NULL, (LPBYTE)&dwRegValue, sizeof(DWORD)))
+	{
+		if (g_dwNetfx48ReleaseVersion <= dwRegValue || g_dwNetfx48Win10ReleaseVersion <= dwRegValue)
+			bRetValue = true;
+	}
+
+	return bRetValue;
+}
 
 /******************************************************************
 Function Name:  RegistryGetValue
@@ -903,6 +935,16 @@ bool RegistryGetValue(HKEY hk, const TCHAR * pszKey, const TCHAR * pszValue, DWO
 	RegCloseKey(hkOpened);
 
 	return true;
+}
+//********************************************* NSIS Plugin Functions ****************************************************************************
+
+//***************************************************** .NET 4.8 *******************************************************************************
+
+extern "C"
+void __declspec(dllexport) IsDotNet48Installed(HWND hwndParent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra)
+{
+	EXDLL_INIT();
+	pushstring((IsNetfx48Installed()) ? L"true" : L"false");
 }
 
 //********************************************* NSIS Plugin Functions ****************************************************************************
